@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { DestinationBrowser } from "@/components/destination-browser"
+import { DestinationBrowser } from "@/components/destination/destination-browser"
 import { demoDestinations, destinationImages, type IDestination, type DestinationCategory, } from "@/lib/destinations"
 
 export const metadata: Metadata = {

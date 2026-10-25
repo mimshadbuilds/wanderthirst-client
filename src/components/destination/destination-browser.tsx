@@ -2,13 +2,8 @@
 
 import { useMemo, useState } from "react"
 
-import { DestinationCard } from "@/components/destination-card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import { DestinationCard } from "@/components/destination/destination-card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import type { IDestination, DestinationCategory } from "@/lib/destinations"
 
