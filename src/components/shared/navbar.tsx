@@ -31,8 +31,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full bg-white">
       <nav
         aria-label="Main navigation"
-        className="relative flex h-[60px] items-center justify-between px-4 sm:px-6"
-      >
+        className="relative flex h-[60px] items-center justify-between px-4 sm:px-6">
         <ul className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (
             <li key={link.href}>
@@ -43,8 +42,7 @@ export function Navbar() {
                   isActive(link.href)
                     ? "text-[13px] font-medium text-brand"
                     : linkClass
-                }
-              >
+                }>
                 {link.label}
               </Link>
             </li>

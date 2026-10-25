@@ -1,7 +1,7 @@
-import { Banner } from "@/components/banner"
-import { CallToAction } from "@/components/cta"
-import { Testimonials } from "@/components/testimonials"
-import { WhyChooseUs } from "@/components/why-choose-us"
+import { Banner } from "@/components/homepage/banner"
+import { CallToAction } from "@/components/homepage/cta"
+import { Testimonials } from "@/components/homepage/testimonials"
+import { WhyChooseUs } from "@/components/homepage/why-choose-us"
 
 export default function Home() {
   return (

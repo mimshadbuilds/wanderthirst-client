@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Josefin_Sans } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/navbar";
+import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
+import { Toaster } from "@/components/ui/toast";
 
 const josefinSans = Josefin_Sans({
   subsets: ["latin"],
@@ -22,6 +24,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Navbar />
         <main className="flex-1">{children}</main>
+        <Toaster />
+        <Footer />
       </body>
     </html>
   );
