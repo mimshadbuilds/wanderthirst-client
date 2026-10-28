@@ -16,9 +16,18 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { redirect } from "next/navigation"
+import { destinationImages } from "@/lib/destinations"
 
 
 const categories = ["Beach", "Mountain", "City", "Adventure", "Cultural", "Cruise"]
+const photoOptions = [
+    { label: "Beach and ocean", image: destinationImages[4] },
+    { label: "Desert lake", image: destinationImages[5] },
+    { label: "Mountain adventure", image: destinationImages[2] },
+    { label: "Machu Picchu", image: destinationImages[3] },
+    { label: "Tropical island", image: destinationImages[1] },
+    { label: "Airplane view", image: destinationImages[0] },
+]
 
 const inputClass =
     "h-11 rounded-md border-slate-200 bg-slate-50 px-3 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30"
@@ -33,7 +42,28 @@ export default function AddDestinationPage() {
 
         const form = e.currentTarget;
         const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries())
+        const amenities = String(formData.get("amenities") ?? "")
+            .split(",")
+            .map((amenity) => amenity.trim())
+            .filter(Boolean)
+        const galleryImages = ["galleryImage1", "galleryImage2"]
+            .map((field) => {
+                const selectedImage = String(formData.get(field) ?? "")
+                if (selectedImage) return selectedImage
+
+                const fallbackIndex = Math.floor(Math.random() * destinationImages.length)
+                return destinationImages[fallbackIndex].src
+            })
+        const fallbackImageUrl =
+            destinationImages[Math.floor(Math.random() * destinationImages.length)].src
+        formData.delete("galleryImage1")
+        formData.delete("galleryImage2")
+        const data = {
+            ...Object.fromEntries(formData.entries()),
+            fallbackImageUrl,
+            galleryImages,
+            amenities,
+        }
 
         const res = await fetch('http://localhost:5000/add-destination', {
             method: 'POST', 
@@ -152,7 +182,7 @@ export default function AddDestinationPage() {
 
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="image-url" className={labelClass}>
-                                        Image URL
+                                        Image URL (optional)
                                     </FieldLabel>
                                     <Input
                                         id="image-url"
@@ -161,7 +191,39 @@ export default function AddDestinationPage() {
                                         placeholder="https://example.com/image.jpg"
                                         className={inputClass}
                                     />
+                                    <p className="text-xs text-slate-500">
+                                        If empty or unavailable, a random bundled photo is shown automatically.
+                                    </p>
                                 </Field>
+
+                                <div className="grid gap-5 sm:grid-cols-2">
+                                    {[1, 2].map((slot) => (
+                                        <Field key={slot} className="gap-2">
+                                            <FieldLabel
+                                                htmlFor={`gallery-image-${slot}`}
+                                                className={labelClass}
+                                            >
+                                                Booking Detail Photo {slot} (optional)
+                                            </FieldLabel>
+                                            <select
+                                                id={`gallery-image-${slot}`}
+                                                name={`galleryImage${slot}`}
+                                                defaultValue=""
+                                                className={`${inputClass} w-full`}
+                                            >
+                                                <option value="">Leave photo slot empty</option>
+                                                {photoOptions.map(({ label, image }) => (
+                                                    <option key={image.src} value={image.src}>
+                                                        {label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </Field>
+                                    ))}
+                                </div>
+                                <p className="-mt-3 text-xs text-slate-500">
+                                    These two optional photos fill the extra gallery spaces on the booking details page.
+                                </p>
 
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="description" className={labelClass}>
@@ -173,6 +235,20 @@ export default function AddDestinationPage() {
                                         placeholder="Describe the travel experience..."
                                         className="min-h-32 resize-y rounded-md border-slate-200 bg-slate-50 px-3 py-2.5 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30"
                                     />
+                                </Field>
+                                <Field className="gap-2">
+                                    <FieldLabel htmlFor="amenities" className={labelClass}>
+                                        Amenities (optional)
+                                    </FieldLabel>
+                                    <Textarea
+                                        id="amenities"
+                                        name="amenities"
+                                        placeholder="Private beach, infinity pool, restaurant"
+                                        className="min-h-24 resize-y rounded-md border-slate-200 bg-slate-50 px-3 py-2.5 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30"
+                                    />
+                                    <p className="text-xs text-slate-500">
+                                        Separate each amenity with a comma.
+                                    </p>
                                 </Field>
                             </FieldGroup>
 

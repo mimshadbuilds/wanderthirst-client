@@ -1,19 +1,17 @@
-import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock, MapPin, Star } from "lucide-react"
-
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { ArrowLeft, CalendarDays, Check, MapPin, Star } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import DestinationEditDialog from "@/components/destination/DestinationEditDialog"
 import DestinationDeleteDialog from "@/components/destination/DestinationDeleteDialog"
+import BookingCard from "@/components/booking/BookingCard"
+import { DestinationPhoto } from "@/components/destination/DestinationPhoto"
 
 export type Destination = {
     country?: string
     destinationName?: string
     imageUrl?: string
+    fallbackImageUrl?: string
     rating?: number | string
     reviews?: number | string
     reviewCount?: number | string
@@ -21,11 +19,12 @@ export type Destination = {
     overview?: string
     description?: string
     highlights?: string[]
+    amenities?: string[]
+    galleryImages?: string[]
     price?: number | string
     category: string
     departureDate: string
     _id: string
-
 }
 
 const defaultHighlights = [
@@ -52,7 +51,6 @@ const DestinationsDetailsPage = async ({ params } : { params: Promise<{id: strin
     const duration = destination.duration ?? "7 Days / 6 Nights"
     const overview = destination.overview ?? destination.description ?? `Discover the magic of ${name} with pristine beaches, vibrant local culture, and unforgettable experiences.`
     const highlights = destination.highlights?.length ? destination.highlights : defaultHighlights
-    const price = typeof destination.price === "number" ? destination.price.toLocaleString("en-US") : destination.price ?? "1,299"
 
     return (
         <main className="min-h-screen bg-background my-5">
@@ -68,20 +66,14 @@ const DestinationsDetailsPage = async ({ params } : { params: Promise<{id: strin
                     </div>
                 </div>
                 <div className="relative h-[230px] overflow-hidden rounded-lg bg-muted sm:h-[320px] lg:h-[420px]">
-                    {destination.imageUrl ? (
-                        <Image
-                            src={destination.imageUrl}
-                            alt={`${name}, ${country}`}
-                            fill
-                            priority
-                            sizes="(max-width: 768px) 100vw, 1200px"
-                            className="object-cover"
-                        />
-                    ) : (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
-                            Destination image unavailable
-                        </div>
-                    )}
+                    <DestinationPhoto
+                        src={destination.imageUrl}
+                        fallbackSrc={destination.fallbackImageUrl}
+                        alt={`${name}, ${country}`}
+                        priority
+                        sizes="(max-width: 768px) 100vw, 1200px"
+                        className="object-cover"
+                    />
                 </div>
                 <Separator className="my-6 sm:my-8" />
                 <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
@@ -125,51 +117,7 @@ const DestinationsDetailsPage = async ({ params } : { params: Promise<{id: strin
                             </ul>
                         </section>
                     </section>
-
-                    <aside className="lg:sticky lg:top-6">
-                        <Card className="shadow-md">
-                            <CardContent className="p-5">
-                                <p className="text-sm text-muted-foreground">Starting from</p>
-                                <div className="mt-1 flex items-baseline gap-2">
-                                    <span className="text-3xl font-semibold text-cyan-600">${price}</span>
-                                    <span className="text-sm text-muted-foreground">per person</span>
-                                </div>
-                                <Separator className="my-5" />
-                                <label htmlFor="travel-date" className="sr-only">Travel date</label>
-                                <div className="mb-4 flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-2.5">
-                                    <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
-                                    <input
-                                        id="travel-date"
-                                        name="travelDate"
-                                        type="date"
-                                        className="w-full min-w-0 bg-transparent text-sm outline-none"
-                                    />
-                                </div>
-                                <Link href='#'>
-                                    <Button className="w-full bg-cyan-600 text-white hover:bg-cyan-700">
-                                        Book Now
-                                        <ArrowRight className="size-4" />
-                                    </Button>
-                                </Link>
-                                <div className="mt-5 space-y-3 text-sm text-muted-foreground">
-                                    {["Free cancellation up to 7 days", "Travel insurance included", "24/7 customer support"].map((item) => (
-                                        <div key={item} className="flex items-start gap-2">
-                                            <Check className="size-4 shrink-0 text-green-600" />
-                                            <span>{item}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <Separator className="my-4" />
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Clock className="size-4" />
-                                    {duration} package
-                                </div>
-                                <Badge variant="secondary" className="mt-4">
-                                    Best travel experience
-                                </Badge>
-                            </CardContent>
-                        </Card>
-                    </aside>
+                <BookingCard destination={destination} />
                 </div>
             </div>
         </main>

@@ -46,7 +46,7 @@ export function Banner() {
               Explore Now
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link href="#search" className={secondaryButton}>
+            <Link href="/destinations" className={secondaryButton}>
               View Destination
             </Link>
           </div>
