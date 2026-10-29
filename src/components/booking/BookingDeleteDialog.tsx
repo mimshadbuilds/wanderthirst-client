@@ -17,18 +17,8 @@ const BookingDeleteDialog = ({ booking }: {booking : IBooking}) => {
 
         if (!res.ok) throw new Error(`Request failed (${res.status})`)
 
-        const result: unknown = await res.json()
-        if (
-            typeof result !== "object" ||
-            result === null ||
-            !("deletedCount" in result) ||
-            result.deletedCount !== 1
-        ) {
-            throw new Error("The booking was not deleted")
-        }
-
         toast.add({ type: "success", title: "Booking cancelled." })
-        router.push('/destinations')
+        router.push('/my-bookings')
         router.refresh()
     } catch {
         toast.add({ type: "error", title: "Failed to cancel booking." })

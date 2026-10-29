@@ -6,6 +6,8 @@ import DestinationEditDialog from "@/components/destination/DestinationEditDialo
 import DestinationDeleteDialog from "@/components/destination/DestinationDeleteDialog"
 import BookingCard from "@/components/booking/BookingCard"
 import { DestinationPhoto } from "@/components/destination/DestinationPhoto"
+import { getServerToken } from "@/lib/server-token"
+
 
 export type Destination = {
     country?: string
@@ -36,8 +38,19 @@ const defaultHighlights = [
 ]
 
 const DestinationsDetailsPage = async ({ params } : { params: Promise<{id: string}>}) => {
-    const { id } = await params
-    const res = await fetch(`http://localhost:5000/destinations/${id}`, { cache: "no-store" })
+    const { id } = await params;
+
+    const token = await getServerToken()
+
+        if (!token) {
+            throw new Error("No authorization token available")
+        }
+
+    const res = await fetch(`http://localhost:5000/destinations/${id}`, { cache: "no-store",
+        headers: {
+            authorization: `Bearer ${token}`,
+        }
+    })
 
     if (res.status === 404) notFound()
     if (!res.ok) throw new Error("Failed to fetch destination")

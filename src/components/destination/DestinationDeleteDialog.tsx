@@ -6,13 +6,25 @@ import { Destination } from "@/app/destinations/[id]/page";
 import { toast } from "../ui/toast";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { getClientToken } from "@/lib/client-token";
 
 const DestinationDeleteDialog = ({ destination }: { destination: Destination }) => {
     const router = useRouter();
     const handleDeleteDialog = async () => {
+
+        const token = await getClientToken()
+            if (!token) {
+            toast.add({ title: "Your session has expired. Please sign in again." })
+            router.push("/sign-in")
+            return;
+        }
+
         try {
             const res = await fetch(`http://localhost:5000/destinations/${destination._id}`, {
                 method: "DELETE",
+                headers: {
+                    authorization: `Bearer ${token}`
+                }
             })
 
             if (res.ok) {

@@ -5,7 +5,7 @@ export function BookingPhotoGallery({
   destinationName,
   fallbackSrc,
 }: {
-  photos: string[]
+  photos: (string | undefined)[]
   destinationName: string
   fallbackSrc?: string
 }) {

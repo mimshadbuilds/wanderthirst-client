@@ -14,14 +14,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.qamu.co.uk" },
     ],
   },
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
 };
 
 export default nextConfig;

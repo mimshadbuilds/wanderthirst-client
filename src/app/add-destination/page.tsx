@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { destinationImages } from "@/lib/destinations"
+import { getClientToken } from "@/lib/client-token"
 
 
 const categories = ["Beach", "Mountain", "City", "Adventure", "Cultural", "Cruise"]
@@ -36,48 +37,64 @@ const labelClass = "text-sm font-semibold text-slate-800"
 
 export default function AddDestinationPage() {
     const [category, setCategory] = useState("Beach")
+    const router = useRouter()
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        const form = e.currentTarget;
-        const formData = new FormData(form);
-        const amenities = String(formData.get("amenities") ?? "")
-            .split(",")
-            .map((amenity) => amenity.trim())
-            .filter(Boolean)
-        const galleryImages = ["galleryImage1", "galleryImage2"]
-            .map((field) => {
-                const selectedImage = String(formData.get(field) ?? "")
-                if (selectedImage) return selectedImage
+        const formData = new FormData(e.currentTarget);
 
-                const fallbackIndex = Math.floor(Math.random() * destinationImages.length)
-                return destinationImages[fallbackIndex].src
+        try {
+            const token = await getClientToken();
+
+            if (!token) {
+                toast.add({ title: "Your session has expired. Please sign in again." })
+                router.push("/signin")
+                return;
+            }
+
+            const amenities = String(formData.get("amenities") ?? "")
+                .split(",")
+                .map((amenity) => amenity.trim())
+                .filter(Boolean)
+            const galleryImages = ["galleryImage1", "galleryImage2"]
+                .map((field) => {
+                    const selectedImage = String(formData.get(field) ?? "")
+                    if (selectedImage) return selectedImage
+
+                    const fallbackIndex = Math.floor(Math.random() * destinationImages.length)
+                    return destinationImages[fallbackIndex].src
+                })
+            const fallbackImageUrl =
+                destinationImages[Math.floor(Math.random() * destinationImages.length)].src
+            formData.delete("galleryImage1")
+            formData.delete("galleryImage2")
+            const result = {
+                ...Object.fromEntries(formData.entries()),
+                fallbackImageUrl,
+                galleryImages,
+                amenities,
+            }
+
+            const res = await fetch('http://localhost:5000/add-destination', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(result)
             })
-        const fallbackImageUrl =
-            destinationImages[Math.floor(Math.random() * destinationImages.length)].src
-        formData.delete("galleryImage1")
-        formData.delete("galleryImage2")
-        const data = {
-            ...Object.fromEntries(formData.entries()),
-            fallbackImageUrl,
-            galleryImages,
-            amenities,
-        }
 
-        const res = await fetch('http://localhost:5000/add-destination', {
-            method: 'POST', 
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        })
+            if (res.ok) {
+                toast.add({ title: `Package successfully added.` })
+                router.push('/destinations')
+                return;
+            }
 
-        const result = await res.json();
-        console.log(result);
-        toast.add({title: `Package successfully added.`})
-        if(res.ok){
-            redirect('/destinations')
+            toast.add({ title: "Failed to add package" })
+        } catch (err) {
+            console.error("Error adding destination:", err);
+            toast.add({ title: "Something went wrong" })
         }
     }
 
@@ -182,7 +199,7 @@ export default function AddDestinationPage() {
 
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="image-url" className={labelClass}>
-                                        Image URL (optional)
+                                        Image URL
                                     </FieldLabel>
                                     <Input
                                         id="image-url"

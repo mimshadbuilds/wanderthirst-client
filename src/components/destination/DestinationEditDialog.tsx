@@ -13,6 +13,7 @@ import { toast } from "../ui/toast";
 import { useState, type FormEvent } from "react";
 import { Destination } from "@/app/destinations/[id]/page";
 import { useRouter } from "next/navigation";
+import { getClientToken } from "@/lib/client-token";
 
 const categories = [
     "Beach",
@@ -39,10 +40,18 @@ const DestinationEditDialog = ({ destination }: { destination: Destination }) =>
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    const token = await getClientToken()
+            if (!token) {
+            toast.add({ title: "Your session has expired. Please sign in again." })
+            router.push("/signin")
+            return;
+        }
+
     const res = await fetch(`http://localhost:5000/destinations/${destination._id}`, {
         method: "PATCH",
         headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${token}`
         },
         body: JSON.stringify(data),
     });

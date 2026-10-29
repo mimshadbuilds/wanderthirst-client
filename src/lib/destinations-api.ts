@@ -67,3 +67,41 @@ export async function getDestinations(): Promise<IDestination[]> {
     return demoDestinations
   }
 }
+
+const FEATURED_DESTINATIONS_ENDPOINT = "http://localhost:5000/featured-destinations"
+
+function pickImage(imageUrl: string | undefined, index: number): IDestination["image"] {
+    if (imageUrl?.startsWith("http://") || imageUrl?.startsWith("https://")) {
+        return imageUrl
+    }
+
+    return destinationImages[index % destinationImages.length]
+}
+
+export async function getFeaturedDestinations(): Promise<IDestination[]> {
+    try {
+        const res = await fetch(FEATURED_DESTINATIONS_ENDPOINT, {
+            cache: "no-store",
+        })
+
+        if (!res.ok) return demoDestinations
+
+        const data: ApiDestination[] = await res.json()
+
+        if (!Array.isArray(data) || data.length === 0) return demoDestinations
+
+        return data.map((item, index) => ({
+            id: item._id,
+            name: item.destinationName,
+            country: item.country,
+            category: (item.category as IDestination["category"] | undefined) ?? "Adventure",
+            price: Number(item.price),
+            duration: item.duration,
+            rating: item.rating ?? 4.5,
+            image: pickImage(item.imageUrl, index),
+            fallbackImage: destinationImages[index % destinationImages.length],
+        }))
+    } catch {
+        return demoDestinations
+    }
+}

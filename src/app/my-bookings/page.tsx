@@ -1,14 +1,10 @@
 import { Suspense } from "react"
 import { headers } from "next/headers"
 
-import {
-  BookingLoadError,
-  BookingsSkeleton,
-  EmptyBookings,
-  SignInPrompt,
-} from "@/components/booking/BookingsStates"
+import { BookingLoadError, BookingsSkeleton, EmptyBookings, SignInPrompt, } from "@/components/booking/BookingsStates"
 import { MyBookingsCard, type IBooking } from "@/components/booking/MyBookingsCard"
 import { auth } from "@/lib/auth"
+import { getServerToken } from "@/lib/server-token"
 
 export default function MyBookingsPage() {
   return (
@@ -61,16 +57,25 @@ async function BookingsPanel() {
 }
 
 async function getBookings(email: string): Promise<IBooking[]> {
-  const response = await fetch(
+  const token = await getServerToken()
+
+  if (!token) {
+    throw new Error("No authorization token available")
+  }
+  const res = await fetch(
     `http://localhost:5000/my-bookings/${encodeURIComponent(email)}`,
-    { cache: "no-store" },
+    { cache: "no-store", 
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    },
   )
 
-  if (!response.ok) {
-    throw new Error(`Could not load bookings (${response.status})`)
+  if (!res.ok) {
+    throw new Error(`Could not load bookings (${res.status})`)
   }
 
-  const data: unknown = await response.json()
+  const data: unknown = await res.json()
   if (!Array.isArray(data)) {
     throw new Error("The bookings response was not a list")
   }

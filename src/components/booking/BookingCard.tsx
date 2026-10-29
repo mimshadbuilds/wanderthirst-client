@@ -49,7 +49,6 @@ const BookingCard = ({ destination }: { destination : Destination }) => {
         try {
             const res = await fetch(`http://localhost:5000/bookings`, {
                 method: "POST",
-                credentials: "include",
                 headers: {
                     'Content-Type': 'application/json',
                 },
