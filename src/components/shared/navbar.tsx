@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import AuthUserPage from "../AuthUser"
+import { authClient } from "@/lib/auth-client"
 
 const navLinks = [
     { label: "Home", href: "/" },
@@ -17,6 +18,9 @@ const linkClass = "text-[13px] font-medium text-slate-800 transition-colors hove
 export function Navbar() {
     const pathname = usePathname()
     const [menuOpen, setMenuOpen] = useState(false)
+    const { data: session } = authClient.useSession()
+    const role = (session?.user as { role?: string } | undefined)?.role || "user"
+    const isAdmin = role === "admin"
 
     const isActive = (href: string) =>
         href === "/" ? pathname === "/" : pathname.startsWith(href)
@@ -45,9 +49,30 @@ export function Navbar() {
                             </Link>
                         </li>
                     ))}
+                    {isAdmin && (
+                        <>
+                            <li>
+                                <Link
+                                    href="/admin"
+                                    aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+                                    className={pathname.startsWith("/admin") ? "text-[13px] font-medium text-brand" : linkClass}>
+                                    Admin
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/add-destination"
+                                    aria-current={pathname === "/add-destination" ? "page" : undefined}
+                                    className={pathname === "/add-destination" ? "text-[13px] font-medium text-brand" : linkClass}>
+                                    Add Destination
+                                </Link>
+                            </li>
+                        </>
+                    )}
                 </ul>
 
-                <Link href="/"
+                <Link
+                    href="/"
                     onClick={() => setMenuOpen(false)}
                     className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold tracking-tight text-brand sm:text-[26px]">
                     Wanderthirst
@@ -71,6 +96,28 @@ export function Navbar() {
                                 </Link>
                             </li>
                         ))}
+                        {isAdmin && (
+                            <>
+                                <li>
+                                    <Link
+                                        href="/admin"
+                                        onClick={() => setMenuOpen(false)}
+                                        aria-current={pathname.startsWith("/admin") ? "page" : undefined}
+                                        className={`block py-2.5 text-sm font-medium ${pathname.startsWith("/admin") ? "text-brand" : "text-slate-800"}`}>
+                                        Admin
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/add-destination"
+                                        onClick={() => setMenuOpen(false)}
+                                        aria-current={pathname === "/add-destination" ? "page" : undefined}
+                                        className={`block py-2.5 text-sm font-medium ${pathname === "/add-destination" ? "text-brand" : "text-slate-800"}`}>
+                                        Add Destination
+                                    </Link>
+                                </li>
+                            </>
+                        )}
                     </ul>
                     <div className="mt-2 flex justify-end border-t border-slate-100 pt-4">
                         <AuthUserPage />

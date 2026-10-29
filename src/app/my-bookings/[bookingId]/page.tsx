@@ -11,14 +11,26 @@ export default async function BookingDetailsPage({
     params: Promise<{ bookingId: string }>
 }) {
     const { bookingId } = await params
-    const session = await auth.api.getSession({ headers: await headers() })
+    const headersList = await headers()
+    const session = await auth.api.getSession({ headers: headersList })
     const email = session?.user?.email
 
     if (!email) redirect("/login")
 
+    let token: string | undefined
+    try {
+        const tokenResult = await (auth.api as unknown as { getToken?: (args: { headers: Headers }) => Promise<{ token?: string; data?: { token?: string } } | undefined> }).getToken?.({ headers: headersList })
+        token = tokenResult?.token || tokenResult?.data?.token
+    } catch (err) {
+        console.warn("Failed to get token for booking details", err)
+    }
+
     const response = await fetch(
-    `http://localhost:5000/my-bookings/${encodeURIComponent(email)}`,
-    { cache: "no-store" },
+        `http://localhost:5000/my-bookings/${encodeURIComponent(email)}`,
+        { 
+            cache: "no-store",
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
     )
 
     if (!response.ok) {

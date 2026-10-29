@@ -17,8 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { useRouter } from "next/navigation"
 import { destinationImages } from "@/lib/destinations"
-import { getClientToken } from "@/lib/client-token"
-
+import { authClient } from "@/lib/auth-client"
 
 const categories = ["Beach", "Mountain", "City", "Adventure", "Cultural", "Cruise"]
 const photoOptions = [
@@ -38,64 +37,99 @@ const labelClass = "text-sm font-semibold text-slate-800"
 export default function AddDestinationPage() {
     const [category, setCategory] = useState("Beach")
     const router = useRouter()
+    const { data: session, isPending } = authClient.useSession()
+    const role = session?.user?.role || "user"
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault();
+        e.preventDefault()
 
-        const formData = new FormData(e.currentTarget);
+        if (isPending) {
+            toast.add({ title: "Loading session..." })
+            return
+        }
+
+        if (!session?.user || role !== "admin") {
+            toast.add({ title: "Only admin can add destinations" })
+            router.push("/")
+            return
+        }
 
         try {
-            const token = await getClientToken();
-
-            if (!token) {
-                toast.add({ title: "Your session has expired. Please sign in again." })
-                router.push("/signin")
-                return;
+            let token: string | undefined
+            try {
+                const tokenResult = await (authClient as unknown as { token?: () => Promise<{ data?: { token?: string }; token?: string } | undefined> }).token?.()
+                token = tokenResult?.data?.token || tokenResult?.token
+            } catch (err) {
+                console.warn("Failed to get auth token", err)
             }
+
+            const form = e.currentTarget as HTMLFormElement
+            const formData = new FormData(form)
 
             const amenities = String(formData.get("amenities") ?? "")
                 .split(",")
                 .map((amenity) => amenity.trim())
                 .filter(Boolean)
+
             const galleryImages = ["galleryImage1", "galleryImage2"]
                 .map((field) => {
                     const selectedImage = String(formData.get(field) ?? "")
                     if (selectedImage) return selectedImage
-
                     const fallbackIndex = Math.floor(Math.random() * destinationImages.length)
                     return destinationImages[fallbackIndex].src
                 })
+
             const fallbackImageUrl =
                 destinationImages[Math.floor(Math.random() * destinationImages.length)].src
+
             formData.delete("galleryImage1")
             formData.delete("galleryImage2")
-            const result = {
+
+            const payload = {
                 ...Object.fromEntries(formData.entries()),
                 fallbackImageUrl,
                 galleryImages,
                 amenities,
             }
 
-            const res = await fetch('http://localhost:5000/add-destination', {
-                method: 'POST',
+            const res = await fetch("http://localhost:5000/add-destination", {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    authorization: `Bearer ${token}`
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
-                body: JSON.stringify(result)
+                body: JSON.stringify(payload),
             })
 
+            const result = await res.json().catch(() => ({}))
+
             if (res.ok) {
-                toast.add({ title: `Package successfully added.` })
-                router.push('/destinations')
-                return;
+                toast.add({ title: "Package successfully added." })
+                router.push("/destinations")
+                return
             }
 
-            toast.add({ title: "Failed to add package" })
+            toast.add({ title: result?.msg || result?.message || "Failed to add package" })
         } catch (err) {
-            console.error("Error adding destination:", err);
+            console.error("Error adding destination:", err)
             toast.add({ title: "Something went wrong" })
         }
+    }
+
+    if (isPending) {
+        return (
+            <section className="min-h-[calc(100vh-60px)] bg-[#f7f8f9] px-4 py-10 sm:px-6 sm:py-12">
+                <div className="mx-auto max-w-7xl text-center">Loading...</div>
+            </section>
+        )
+    }
+
+    if (!session?.user || role !== "admin") {
+        return (
+            <section className="min-h-[calc(100vh-60px)] bg-[#f7f8f9] px-4 py-10 sm:px-6 sm:py-12">
+                <div className="mx-auto max-w-7xl text-center">Not Found</div>
+            </section>
+        )
     }
 
     return (
@@ -106,42 +140,26 @@ export default function AddDestinationPage() {
                 </h1>
                 <Card className="mx-auto mt-8 w-full max-w-2xl rounded-xl border-slate-200 bg-white shadow-sm">
                     <CardContent className="p-5 sm:p-8">
-                        <form onSubmit={handleSubmit}
-                            onReset={() => setCategory("Beach")}>
+                        <form onSubmit={handleSubmit} onReset={() => setCategory("Beach")}>
                             <FieldGroup className="gap-5">
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="destination-name" className={labelClass}>
                                         Destination Name
                                     </FieldLabel>
-                                    <Input
-                                        id="destination-name"
-                                        name="destinationName"
-                                        placeholder="Bali Paradise"
-                                        className={inputClass}
-                                    />
+                                    <Input id="destination-name" name="destinationName" placeholder="Bali Paradise" className={inputClass} />
                                 </Field>
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     <Field className="gap-2">
                                         <FieldLabel htmlFor="country" className={labelClass}>
                                             Country
                                         </FieldLabel>
-                                        <Input
-                                            id="country"
-                                            name="country"
-                                            placeholder="Indonesia"
-                                            className={inputClass}
-                                        />
+                                        <Input id="country" name="country" placeholder="Indonesia" className={inputClass} />
                                     </Field>
                                     <Field className="gap-2">
                                         <FieldLabel htmlFor="category" className={labelClass}>
                                             Category
                                         </FieldLabel>
-                                        <Select
-                                            name="category"
-                                            value={category}
-                                            onValueChange={(value) => { 
-                                                if(value !== null ) setCategory(value)
-                                                }}>
+                                        <Select name="category" value={category} onValueChange={(value) => value !== null && setCategory(value)}>
                                             <SelectTrigger id="category" className={inputClass}>
                                                 <SelectValue placeholder="Select a category" />
                                             </SelectTrigger>
@@ -161,27 +179,14 @@ export default function AddDestinationPage() {
                                         <FieldLabel htmlFor="price" className={labelClass}>
                                             Price (USD)
                                         </FieldLabel>
-                                        <Input
-                                            id="price"
-                                            name="price"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            placeholder="e.g., 1299"
-                                            className={inputClass}
-                                        />
+                                        <Input id="price" name="price" type="number" min="0" step="0.01" placeholder="e.g., 1299" className={inputClass} />
                                     </Field>
 
                                     <Field className="gap-2">
                                         <FieldLabel htmlFor="duration" className={labelClass}>
                                             Duration
                                         </FieldLabel>
-                                        <Input
-                                            id="duration"
-                                            name="duration"
-                                            placeholder="e.g., 7 Days/6 Nights"
-                                            className={inputClass}
-                                        />
+                                        <Input id="duration" name="duration" placeholder="e.g., 7 Days/6 Nights" className={inputClass} />
                                     </Field>
                                 </div>
 
@@ -189,45 +194,24 @@ export default function AddDestinationPage() {
                                     <FieldLabel htmlFor="departure-date" className={labelClass}>
                                         Departure Date
                                     </FieldLabel>
-                                    <Input
-                                        id="departure-date"
-                                        name="departureDate"
-                                        type="date"
-                                        className={inputClass}
-                                    />
+                                    <Input id="departure-date" name="departureDate" type="date" className={inputClass} />
                                 </Field>
 
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="image-url" className={labelClass}>
-                                        Image URL
+                                        Image URL (optional)
                                     </FieldLabel>
-                                    <Input
-                                        id="image-url"
-                                        name="imageUrl"
-                                        type="url"
-                                        placeholder="https://example.com/image.jpg"
-                                        className={inputClass}
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        If empty or unavailable, a random bundled photo is shown automatically.
-                                    </p>
+                                    <Input id="image-url" name="imageUrl" type="url" placeholder="https://example.com/image.jpg" className={inputClass} />
+                                    <p className="text-xs text-slate-500">If empty or unavailable, a random bundled photo is shown automatically.</p>
                                 </Field>
 
                                 <div className="grid gap-5 sm:grid-cols-2">
                                     {[1, 2].map((slot) => (
                                         <Field key={slot} className="gap-2">
-                                            <FieldLabel
-                                                htmlFor={`gallery-image-${slot}`}
-                                                className={labelClass}
-                                            >
+                                            <FieldLabel htmlFor={`gallery-image-${slot}`} className={labelClass}>
                                                 Booking Detail Photo {slot} (optional)
                                             </FieldLabel>
-                                            <select
-                                                id={`gallery-image-${slot}`}
-                                                name={`galleryImage${slot}`}
-                                                defaultValue=""
-                                                className={`${inputClass} w-full`}
-                                            >
+                                            <select id={`gallery-image-${slot}`} name={`galleryImage${slot}`} defaultValue="" className={`${inputClass} w-full`}>
                                                 <option value="">Leave photo slot empty</option>
                                                 {photoOptions.map(({ label, image }) => (
                                                     <option key={image.src} value={image.src}>
@@ -238,49 +222,30 @@ export default function AddDestinationPage() {
                                         </Field>
                                     ))}
                                 </div>
-                                <p className="-mt-3 text-xs text-slate-500">
-                                    These two optional photos fill the extra gallery spaces on the booking details page.
-                                </p>
+                                <p className="-mt-3 text-xs text-slate-500">These two optional photos fill the extra gallery spaces on the booking details page.</p>
 
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="description" className={labelClass}>
                                         Description
                                     </FieldLabel>
-                                    <Textarea
-                                        id="description"
-                                        name="description"
-                                        placeholder="Describe the travel experience..."
-                                        className="min-h-32 resize-y rounded-md border-slate-200 bg-slate-50 px-3 py-2.5 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30"
-                                    />
+                                    <Textarea id="description" name="description" placeholder="Describe the travel experience..." className="min-h-32 resize-y rounded-md border-slate-200 bg-slate-50 px-3 py-2.5 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30" />
                                 </Field>
                                 <Field className="gap-2">
                                     <FieldLabel htmlFor="amenities" className={labelClass}>
                                         Amenities (optional)
                                     </FieldLabel>
-                                    <Textarea
-                                        id="amenities"
-                                        name="amenities"
-                                        placeholder="Private beach, infinity pool, restaurant"
-                                        className="min-h-24 resize-y rounded-md border-slate-200 bg-slate-50 px-3 py-2.5 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30"
-                                    />
-                                    <p className="text-xs text-slate-500">
-                                        Separate each amenity with a comma.
-                                    </p>
+                                    <Textarea id="amenities" name="amenities" placeholder="Private beach, infinity pool, restaurant" className="min-h-24 resize-y rounded-md border-slate-200 bg-slate-50 px-3 py-2.5 text-base shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-brand/30" />
+                                    <p className="text-xs text-slate-500">Separate each amenity with a comma.</p>
                                 </Field>
                             </FieldGroup>
 
                             <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                                <Button
-                                    type="reset"
-                                    variant="outline"
-                                    className="h-11 rounded-md border-destructive/30 px-5 text-sm text-destructive hover:bg-destructive/5 hover:text-destructive">
+                                <Button type="reset" variant="outline" className="h-11 rounded-md border-destructive/30 px-5 text-sm text-destructive hover:bg-destructive/5 hover:text-destructive">
                                     <Trash2 className="size-4" />
                                     Cancel
                                 </Button>
 
-                                <Button
-                                    type="submit"
-                                    className="h-11 rounded-md bg-brand px-5 text-sm text-white hover:bg-brand-dark">
+                                <Button type="submit" className="h-11 rounded-md bg-brand px-5 text-sm text-white hover:bg-brand-dark">
                                     <Save className="size-4" />
                                     Add Travel Package
                                 </Button>

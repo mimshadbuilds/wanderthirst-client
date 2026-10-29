@@ -23,5 +23,22 @@ export const auth = betterAuth({
             strategy: 'jwt',
             maxAge: 7 * 24 * 60 * 60
         }
-    }
+    },
+    user: {
+        additionalFields: {
+            nationality: {
+                type: "string",
+                required: false,
+                input: true,
+                returned: true,
+            },
+            role: {
+                type: "string",
+                required: false,
+                input: false,
+                returned: true,
+                defaultValue: "user",
+            },
+        },
+    },
 });

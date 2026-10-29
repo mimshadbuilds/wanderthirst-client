@@ -42,6 +42,7 @@ export default function SignUpPage() {
             name: user.name as string,
             password: user.password as string,
             image: user.image as string,
+            nationality: user.nationality as string,
             callbackURL: '/', 
         })
 
@@ -117,6 +118,16 @@ export default function SignUpPage() {
                         type="email"
                         name="email"
                         placeholder="m@example.com"
+                        required
+                        />
+                    </Field>
+                        <Field>
+                        <FieldLabel htmlFor="nationality">Country</FieldLabel>
+                        <Input
+                        id="nationality"
+                        type="text"
+                        name="nationality"
+                        placeholder="United States"
                         required
                         />
                     </Field>

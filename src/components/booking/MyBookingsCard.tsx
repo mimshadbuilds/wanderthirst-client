@@ -104,6 +104,7 @@ export function MyBookingsCard({
 
             <Button
               render={<Link href={`/my-bookings/${booking._id}`} />}
+              nativeButton={false}
               className="h-8 gap-1.5 rounded-xs bg-brand px-3 text-xs font-medium text-white hover:bg-brand-dark">
               <Eye className="size-3.5" />
               View

@@ -26,8 +26,7 @@ export function CallToAction() {
         </p>
         <Link
           href="/destinations"
-          className="group mt-7 inline-flex h-12 items-center justify-center gap-2 bg-white px-8 text-[13px] font-semibold tracking-[0.08em] text-slate-900 uppercase transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
-        >
+          className="group mt-7 inline-flex h-12 items-center justify-center gap-2 bg-white px-8 text-[13px] font-semibold tracking-[0.08em] text-slate-900 uppercase transition-colors hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none">
           Book Your Trip Today
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
