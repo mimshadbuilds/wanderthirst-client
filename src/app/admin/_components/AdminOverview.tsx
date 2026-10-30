@@ -24,9 +24,9 @@ export default function AdminOverview() {
                 const headersInit: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
 
                 const [destRes, userRes, bookingRes] = await Promise.all([
-                    fetch("http://localhost:5000/destinations", { cache: "no-store" }),
-                    fetch("http://localhost:5000/users/count", { cache: "no-store", headers: headersInit }),
-                    fetch("http://localhost:5000/bookings/count", { cache: "no-store", headers: headersInit }),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/destinations`, { cache: "no-store" }),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/count`, { cache: "no-store", headers: headersInit }),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings/count`, { cache: "no-store", headers: headersInit }),
                 ])
 
                 if (destRes.ok) {

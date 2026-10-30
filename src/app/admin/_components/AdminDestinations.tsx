@@ -16,7 +16,7 @@ export default function AdminDestinations() {
     useEffect(() => {
         const fetchDestinations = async () => {
             try {
-                const res = await fetch("http://localhost:5000/destinations", { cache: "no-store" })
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/destinations`, { cache: "no-store" })
                 if (res.ok) {
                     const data = await res.json()
                     setDestinations(data)

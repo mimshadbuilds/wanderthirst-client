@@ -46,7 +46,7 @@ const DestinationsDetailsPage = async ({ params } : { params: Promise<{id: strin
             throw new Error("No authorization token available")
         }
 
-    const res = await fetch(`http://localhost:5000/destinations/${id}`, { cache: "no-store",
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/destinations/${id}`, { cache: "no-store",
         headers: {
             authorization: `Bearer ${token}`,
         }

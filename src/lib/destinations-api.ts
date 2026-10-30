@@ -5,7 +5,7 @@ import {
   type IDestination,
 } from "@/lib/destinations"
 
-const DESTINATIONS_ENDPOINT = "http://localhost:5000/destinations"
+const DESTINATIONS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_URL}/destinations`
 
 interface ApiDestination {
   _id: string
@@ -68,7 +68,7 @@ export async function getDestinations(): Promise<IDestination[]> {
   }
 }
 
-const FEATURED_DESTINATIONS_ENDPOINT = "http://localhost:5000/featured-destinations"
+const FEATURED_DESTINATIONS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_URL}/featured-destinations`
 
 function pickImage(imageUrl: string | undefined, index: number): IDestination["image"] {
     if (imageUrl?.startsWith("http://") || imageUrl?.startsWith("https://")) {

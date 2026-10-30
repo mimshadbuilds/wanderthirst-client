@@ -20,7 +20,7 @@ const DestinationDeleteDialog = ({ destination }: { destination: Destination }) 
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/destinations/${destination._id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/destinations/${destination._id}`, {
                 method: "DELETE",
                 headers: {
                     authorization: `Bearer ${token}`

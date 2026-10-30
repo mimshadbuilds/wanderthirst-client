@@ -30,7 +30,7 @@ export default function AdminBookings() {
                     console.warn("Failed to get auth token", err)
                 }
 
-                const res = await fetch("http://localhost:5000/all-bookings", { 
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/all-bookings`, { 
                     cache: "no-store",
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
                 })

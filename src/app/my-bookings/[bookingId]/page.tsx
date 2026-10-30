@@ -26,7 +26,7 @@ export default async function BookingDetailsPage({
     }
 
     const response = await fetch(
-        `http://localhost:5000/my-bookings/${encodeURIComponent(email)}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/my-bookings/${encodeURIComponent(email)}`,
         { 
             cache: "no-store",
             headers: token ? { Authorization: `Bearer ${token}` } : {},
